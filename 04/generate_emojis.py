@@ -4,11 +4,11 @@ import torch.nn as nn
 
 class LongShortTermMemoryModel(nn.Module):
 
-    def __init__(self, encoding_size):
+    def __init__(self, encoding_size, emoji_size):
         super(LongShortTermMemoryModel, self).__init__()
 
         self.lstm = nn.LSTM(encoding_size, 128)  # 128 is the state size
-        self.dense = nn.Linear(128, encoding_size)  # 128 is the state size
+        self.dense = nn.Linear(128, emoji_size)  # 128 is the state size
 
     def reset(self):  # Reset states prior to new input sequence
         zero_state = torch.zeros(1, 1, 128)  # Shape: (number of layers, batch size, state size)
@@ -43,64 +43,84 @@ char_encodings = [
 ]
 encoding_size = len(char_encodings)
 
+index_to_char = [' ', 'h', 'a', 't', 'r', 'c', 'f', 'l', 'm', 'p', 's', 'o', 'n']
+index_to_emoji = ['🎩', '🐀', '🐈', '🏢', '👨', '🧢', '👦']
+emoji_names = ['hat ', 'rat ', 'cat ', 'flat', 'matt', 'cap ', 'son ' ]
+
+
+
 emoji_encodings = [
-    [1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],  # ' '
-    [0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],  # 'hat'
-    [0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],  # 'rat'
-    [0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.],  # 'cat'
-    [0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0.],  # 'flat'
-    [0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0.], # 'matt'
-    [0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0.], # 'cap'
-    [0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0.], # 'son'
+    [ 1., 0., 0., 0., 0., 0., 0.],  # 'hat'
+    [ 0., 1., 0., 0., 0., 0., 0.],  # 'rat'
+    [ 0., 0., 1., 0., 0., 0., 0.],  # 'cat'
+    [ 0., 0., 0., 1., 0., 0., 0.],  # 'flat'
+    [ 0., 0., 0., 0., 1., 0., 0.], # 'matt'
+    [ 0., 0., 0., 0., 0., 1., 0.], # 'cap'
+    [ 0., 0., 0., 0., 0., 0., 1.], # 'son'
 ]
 emoji_size = len(emoji_encodings)
+print(emoji_size)
 
-index_to_char = [' ', '🎩', '🐀', '🐈', '🏢', '👨', '🧢', '👦']
 
-x_train = torch.tensor([[char_encodings[1]], [char_encodings[2]], [char_encodings[3]],[char_encodings[0]],    # 'hat '
-                        [char_encodings[4]], [char_encodings[2]], [char_encodings[3]],[char_encodings[0]],    # 'rat '
-                        [char_encodings[5]], [char_encodings[2]], [char_encodings[3]],[char_encodings[0]],    # 'cat '
-                        [char_encodings[6]], [char_encodings[7]], [char_encodings[2]], [char_encodings[3]],   # 'flat'
-                        [char_encodings[8]], [char_encodings[2]], [char_encodings[3]],[char_encodings[3]],    # 'matt'
-                        [char_encodings[5]], [char_encodings[2]], [char_encodings[9]],[char_encodings[0]],    # 'cap '
-                        [char_encodings[10]], [char_encodings[11]], [char_encodings[12]],[char_encodings[0]]] # 'son '
+x_train = torch.tensor([[[char_encodings[1]], [char_encodings[2]], [char_encodings[3]],[char_encodings[0]]],    # 'hat '
+                        [[char_encodings[4]], [char_encodings[2]], [char_encodings[3]],[char_encodings[0]]],    # 'rat '
+                        [[char_encodings[5]], [char_encodings[2]], [char_encodings[3]],[char_encodings[0]]],    # 'cat '
+                        [[char_encodings[6]], [char_encodings[7]], [char_encodings[2]], [char_encodings[3]]],   # 'flat'
+                        [[char_encodings[8]], [char_encodings[2]], [char_encodings[3]],[char_encodings[3]]],    # 'matt'
+                        [[char_encodings[5]], [char_encodings[2]], [char_encodings[9]],[char_encodings[0]]],    # 'cap '
+                        [[char_encodings[10]], [char_encodings[11]], [char_encodings[12]],[char_encodings[0]]]] # 'son '
                         )
-print(x_train.shape)
 
-y_train = torch.tensor([emoji_encodings[1], emoji_encodings[1], emoji_encodings[1],emoji_encodings[1],    # 'hat '
-                       emoji_encodings[2], emoji_encodings[2], emoji_encodings[2],emoji_encodings[2],    # 'rat '
-                      emoji_encodings[3], emoji_encodings[3], emoji_encodings[3],emoji_encodings[3],    # 'cat '
-                      emoji_encodings[4], emoji_encodings[4], emoji_encodings[4], emoji_encodings[4],   # 'flat'
-                      emoji_encodings[5], emoji_encodings[5], emoji_encodings[5],emoji_encodings[5],    # 'matt'
-                      emoji_encodings[6], emoji_encodings[6], emoji_encodings[6],emoji_encodings[6],    # 'cap '
-                      emoji_encodings[7], emoji_encodings[7], emoji_encodings[7],emoji_encodings[7], # 'son '
+y_train = torch.tensor([[emoji_encodings[0], emoji_encodings[0], emoji_encodings[0],emoji_encodings[0]],    # 'hat '
+                        [emoji_encodings[1], emoji_encodings[1], emoji_encodings[1],emoji_encodings[1]],    # 'rat '
+                       [emoji_encodings[2], emoji_encodings[2], emoji_encodings[2],emoji_encodings[2]],     # 'cat '
+                       [emoji_encodings[3], emoji_encodings[3], emoji_encodings[3],emoji_encodings[3]],     # 'flat'
+                       [emoji_encodings[4], emoji_encodings[4], emoji_encodings[4], emoji_encodings[4]],    # 'matt'
+                       [emoji_encodings[5], emoji_encodings[5], emoji_encodings[5],emoji_encodings[5]],     # 'cap '
+                       [emoji_encodings[6], emoji_encodings[6], emoji_encodings[6],emoji_encodings[6]],     # 'son '
                       ])  
 
-#y_train = torch.tensor([emoji_encodings[1], emoji_encodings[2], emoji_encodings[3], emoji_encodings[4], emoji_encodings[5], emoji_encodings[6], emoji_encodings[7]])  # 'hello '
-
-model = LongShortTermMemoryModel(encoding_size)
-hat_tensor = torch.tensor([[char_encodings[1]], [char_encodings[2]], [char_encodings[3]],[char_encodings[0]]])
+#print(y_train)
+model = LongShortTermMemoryModel(encoding_size, emoji_size)
 
 # RSMprop fungerer som regel bedre enn gradient descent og Adam til recurrent neural networks
 optimizer = torch.optim.RMSprop(model.parameters(), 0.001)
 for epoch in range(500):
+    for i in range(emoji_size):
+        model.reset()
 
-    model.reset()
-    model.loss(x_train, y_train).backward()
-    optimizer.step()
-    optimizer.zero_grad()
-    if epoch % 10 == 9:
-        # Generate characters from the initial characters ' h'
-        
-        for i in range(3):
+        #print(x_train[i])
+        #print(x_train[i].shape)
+        #print(y_train[i])
+        #print(y_train[i].shape)
+        model.loss(x_train[i], y_train[i]).backward()
+        optimizer.step()
+        optimizer.zero_grad()
 
-            model.reset()
-            text = 'hat '
-            y = model.f(hat_tensor[i])
-            text += index_to_char[y.argmax(1)]
-    
-        print(y)
-            
+# Predicter alle emojis
+for i in range(emoji_size):
+  model.reset()
+  y = model.f(x_train[i])[-1, :]
+  print(emoji_names[i] + ": " + index_to_emoji[y.argmax()])
 
-           
-        print(index_to_char[y.argmax(1)])
+
+
+
+rats_tensor = torch.tensor([[char_encodings[4]], [char_encodings[2]], [char_encodings[3]],[char_encodings[10]]])
+rt_tensor = torch.tensor([[char_encodings[4]], [char_encodings[3]],[char_encodings[0]]])
+catt_tensor = torch.tensor([[char_encodings[5]], [char_encodings[2]],[char_encodings[3]],[char_encodings[3]]])
+
+model.reset()
+y = model.f(rats_tensor)[-1, :]
+print(y.detach().numpy())
+print("rats :" + index_to_emoji[y.argmax()])
+
+model.reset()
+y = model.f(rt_tensor)[-1, :]
+print(y.detach().numpy())
+print("rt :" + index_to_emoji[y.argmax()])
+
+model.reset()
+y = model.f(catt_tensor)[-1, :]
+print(y.detach().numpy())
+print("catt :" + index_to_emoji[y.argmax()])
