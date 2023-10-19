@@ -76,6 +76,11 @@ class QLearningAgent:
         new_q_value = (1 - self.alpha) * current_q_value + self.alpha * (reward + self.gamma * next_q_value)
         self.q_table[state[0], state[1], action] = new_q_value
 
+    def print_q_table(self):
+        for i in range(self.q_table.shape[0]):
+            for j in range(self.q_table.shape[1]):           
+                print(f"State ({i}, {j}):", self.q_table[i, j])
+
 def draw_q_values(q_table):
     for i in range(width):
         for j in range(height):
@@ -179,4 +184,5 @@ while running:
 
     episode += 1
 
+agent.print_q_table()
 pygame.quit()
