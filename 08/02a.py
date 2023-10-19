@@ -77,14 +77,11 @@ class QLearningAgent:
         self.q_table[state[0], state[1], action] = new_q_value
 
 def draw_q_values(q_table):
-    
     for i in range(width):
         for j in range(height):
             actions = q_table[i, j]
             best_action = np.argmax(actions)
             color = abs(255 - int(actions[best_action]) * 255) % 255
-            print(int(actions[best_action]) * 255)
-            print(color)
             pygame.draw.rect(screen, (color, color, color), (i * cell_size, j * cell_size, cell_size, cell_size))
 
             # Adjust the angle based on the best action
@@ -96,21 +93,19 @@ def draw_q_values(q_table):
             elif best_action == 2:
                 angle = 0  # Left
 
+            # Draw "arrow"
+            pygame.draw.line(screen, (80, 199, 105), (i * cell_size + cell_size // 2, j * cell_size + cell_size // 2),
+                            (i * cell_size + cell_size // 2 - np.cos(np.radians(angle)) * actions[best_action] * 20,
+                             j * cell_size + cell_size // 2 + np.sin(np.radians(angle)) * actions[best_action] * 20), 2)
             
 
-            # Draw arrow
-            pygame.draw.line(screen, (0, 255, 0), (i * cell_size + cell_size // 2, j * cell_size + cell_size // 2),
-                             (i * cell_size + cell_size // 2 - np.cos(np.radians(angle)) * actions[best_action] * 20,
-                              j * cell_size + cell_size // 2 + np.sin(np.radians(angle)) * actions[best_action] * 20), 2)
 
 def draw_agent(current_position):
-
     for i in range(width):
         for j in range(height):
             # Draw a dot for the current position
             if (i, j) == current_position:
-                pygame.draw.circle(screen, (0, 0, 255), (i * cell_size + cell_size // 2, j * cell_size + cell_size // 2), 10)
-
+                pygame.draw.circle(screen, (44, 130, 242), (i * cell_size + cell_size // 2, j * cell_size + cell_size // 2), 10)
 
 
 def draw_danger_spaces(danger_spaces):
@@ -121,8 +116,7 @@ def draw_danger_spaces(danger_spaces):
         for j in range(height):
             # Draw a dot for the current position
             if (i, j) in danger_spaces:
-
-                 # Draw the image
+                # Draw the image
                 screen.blit(image, (i * cell_size + (cell_size-img_size) // 2, j * cell_size + (cell_size-img_size) // 2))
 
 def draw_goal(goal_pos):
@@ -132,10 +126,6 @@ def draw_goal(goal_pos):
     x = goal_pos[0]
     y = goal_pos[1]
     screen.blit(image, (x * cell_size + (cell_size-img_size) // 2, y * cell_size + (cell_size-img_size) // 2))
-
-
-
-
 
 # Main loop
 width, height = 5, 5
