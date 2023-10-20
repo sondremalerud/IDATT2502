@@ -2,6 +2,7 @@ import numpy as np
 import pygame
 import sys
 import random
+import math
 
 class GridWorld:
     def __init__(self, width, height, goal_pos):
@@ -9,14 +10,14 @@ class GridWorld:
         self.height = height
         self.goal_pos = goal_pos
         self.agent_pos = (0, 0)
-        self.actions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # Up, Down, Left, Right
+        self.actions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # Up, Down, Left, Right  //// # left right up down
         self.danger_spaces = [(2, 1), (0, 3), (3, 3), (4, 3)]
         self.state = (0, 0)
         self.done = False
         self.agent_visited = [self.state]
 
     def reset(self):
-        self.agent_pos = self.get_start_pos(self.danger_spaces)
+        self.agent_pos = self.get_start_pos(self.danger_spaces+[goal_pos])
         self.state = self.agent_pos
         self.done = False
         self.agent_visited = [self.state]
@@ -101,23 +102,31 @@ def draw_q_values(q_table):
         for j in range(height):
             actions = q_table[i, j]
             best_action = np.argmax(actions)
-            color = abs(255 - int(actions[best_action]) * 255) % 255
+            color = 0
+            best_action = np.argmax(actions)
+
             pygame.draw.rect(screen, (color, color, color), (i * cell_size, j * cell_size, cell_size, cell_size))
 
-            # Adjust the angle based on the best action
-            angle = 90
-            if best_action == 0:
-                angle = -270  # Up
-            elif best_action == 1:
-                angle = -180  # Down
-            elif best_action == 2:
-                angle = 0  # Left
+            x = i * cell_size + cell_size // 2
+            y = j * cell_size + cell_size // 2
+            line_length = 40
 
-            # Draw "arrow"
-            pygame.draw.line(screen, (80, 199, 105), (i * cell_size + cell_size // 2, j * cell_size + cell_size // 2),
-                            ((i * cell_size + cell_size // 2 - np.cos(np.radians(angle)) * actions[best_action] * 20),
-                             (j * cell_size + cell_size // 2 + np.sin(np.radians(angle)) * actions[best_action] * 20)), 2)
-            
+            # Calculate the endpoint based on the action
+            if best_action == 0:  # Left
+                end_x = x - line_length
+                end_y = y
+            elif best_action == 1:  # Right
+                end_x = x + line_length
+                end_y = y
+            elif best_action == 2:  # Up
+                end_x = x
+                end_y = y - line_length
+            elif best_action == 3:  # Down
+                end_x = x
+                end_y = y + line_length
+
+            # Draw the line
+            pygame.draw.line(screen, (80, 199, 105), (x, y), (end_x, end_y), 3)
 
 
 def draw_agent(current_position):
@@ -129,7 +138,7 @@ def draw_agent(current_position):
 
 
 def draw_danger_spaces(danger_spaces):
-    image = pygame.image.load("IDATT2502/08/alien.png")
+    image = pygame.image.load("./08/alien.png")
     img_size = 30
     image  = pygame.transform.scale(image, (img_size,img_size))
     for i in range(width):
@@ -140,7 +149,7 @@ def draw_danger_spaces(danger_spaces):
                 screen.blit(image, (i * cell_size + (cell_size-img_size) // 2, j * cell_size + (cell_size-img_size) // 2))
 
 def draw_goal(goal_pos):
-    image = pygame.image.load("IDATT2502/08/star.png")
+    image = pygame.image.load("./08/star.png")
     img_size = 30
     image  = pygame.transform.scale(image, (img_size,img_size))
     x = goal_pos[0]
@@ -182,8 +191,8 @@ while running:
 
         state = next_state
         total_reward += reward        
-        if episode % 1000 == 0:
-            pygame.time.delay(80)
+        if episode % 500 == 0:
+            pygame.time.delay(100)
         
         draw_agent(env.agent_pos)
         pygame.display.flip()
